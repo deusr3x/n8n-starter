@@ -1,0 +1,328 @@
+{
+  "name": "qdrant-test",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/home/node/Documents/",
+        "events": [
+          "add"
+        ],
+        "options": {
+          "followSymlinks": true,
+          "usePolling": true
+        }
+      },
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        -740,
+        -360
+      ],
+      "id": "eff0a919-eb68-4f91-bc0f-2aa8b3b03e1a",
+      "name": "Local File Trigger"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.path }}",
+        "options": {
+          "mimeType": "text/plain"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -360
+      ],
+      "id": "c1840976-e689-4b47-88c6-2abee13a9c58",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "=my_collections",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        -360
+      ],
+      "id": "617397d3-9b5d-40d7-b6bd-57a6506106c8",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "2hIqaREc2wluJJLJ",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -60
+      ],
+      "id": "30f9f315-779e-46b4-a12a-09d62eddbc4d",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "4A3JDBQQ1oTjSGrf",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        260,
+        -80
+      ],
+      "id": "d09051c3-5df7-4f96-9ff8-4b24a5d421f5",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "typeVersion": 1,
+      "position": [
+        360,
+        140
+      ],
+      "id": "87f7cc12-2234-47ed-876d-8732a872a6e0",
+      "name": "Token Splitter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        -980
+      ],
+      "id": "3c78e8d8-f1b3-499f-9501-535e45d46c51",
+      "name": "When chat message received",
+      "webhookId": "7b61de4e-a89b-4e0b-8648-0f4774bfa92f"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful assistant, specialising in answering questions on the documents stored in available tools.\n\n### TOOL\nUse the my_ tool to:\n- perform searches on documents and retrieve information relevant to the user's query and provide additional context as needed.\n\n**Focus and Relevance**\n- ensure all responses are directly aligned with the user's question\n- Avoid including extraneous details"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -500,
+        -980
+      ],
+      "id": "1d90d63c-4b71-497d-b011-82b44433b8e8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "mistral-small3.1:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -700
+      ],
+      "id": "7c8038b0-3cdf-40f5-b1d6-2f4874b08954",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "4A3JDBQQ1oTjSGrf",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "my_knowledge_base",
+        "toolDescription": "A collection of pdfs on a range of topics",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "my_collections",
+          "mode": "list",
+          "cachedResultName": "my_collections"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        -220,
+        -800
+      ],
+      "id": "6c56cfc5-4d3c-402b-b9c3-85da779f475d",
+      "name": "Qdrant Vector Store1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "2hIqaREc2wluJJLJ",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -600
+      ],
+      "id": "efd39625-25bd-4a91-9fc6-1a5cc708b97f",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "4A3JDBQQ1oTjSGrf",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Local File Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store": {
+      "main": [
+        []
+      ]
+    },
+    "Token Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "127a2488-add5-4347-a517-2a98a9f72a08",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7914e2d7b3e86226643757c43ecbe44327880e855954fbfa95cf7b39f1a72459"
+  },
+  "id": "cF7EdJgQdDPLPL7b",
+  "tags": []
+}
