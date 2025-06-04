@@ -1,0 +1,243 @@
+{
+  "name": "TavilySearch",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b7ccb0df-9fe1-44fc-81a8-51a085518b31",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -440
+      ],
+      "webhookId": "cdb5c076-d458-4b9d-8398-f43bd25059b1"
+    },
+    {
+      "parameters": {
+        "model": "qwen3:30b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        260,
+        -200
+      ],
+      "id": "8fe85e54-18b1-4813-8936-9c3324bb687d",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "4A3JDBQQ1oTjSGrf",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful assistant.  You have the ability to search the internet to obtain more recent information.  Web searches can also return urls that can be used to extract further information from websites.\nSo to help answer questions, you will first search using the Tavily Search tool.  You will then take the urls provided by that search and use the Tavily Extract tool to get more information.  You will then parse this information and look for the answer.  And report back to the user with your findings.\nBecause you are a helpful assistant, you always provide sources for the information you provide."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        340,
+        -440
+      ],
+      "id": "7d98f75b-e168-452d-9ac1-bfd32e0e3252",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This is a search engine tool.  You can use this tool to get the latest search results and provide accurate information to help answer any question.\nThis tool will provide URLs that can be used with the Tavily Extract tool to get more information.",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        580,
+        -200
+      ],
+      "id": "1d8866b8-9b40-4768-9c0b-25fefcc7379e",
+      "name": "Tavily Search",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "2tFvrbjR7ppE2H7Y",
+          "name": "Tavily Search"
+        },
+        "httpHeaderAuth": {
+          "id": "wNStq2oTCo171MUh",
+          "name": "Tavily Search"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Extract information from websites.  Take the url from the Tavily Search tool.  This tool will return the contents of the websites and reveal more information.",
+        "method": "POST",
+        "url": "https://api.tavily.com/extract",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "urls",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `The URL gained from the web search.`, 'string') }}"
+            },
+            {
+              "name": "include_images",
+              "value": "false"
+            },
+            {
+              "name": "extract_depth",
+              "value": "basic"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -200
+      ],
+      "id": "c47e04e2-b9ac-4d73-bbe6-abacd722ec93",
+      "name": "Tavily Extract",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "wNStq2oTCo171MUh",
+          "name": "Tavily Search"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Think if the returned results are able to answer the question.  If further information is needed, use the Tavily Extract tool.\nIt may also be helpful to break the question down into smaller parts and perform separate searches"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -200
+      ],
+      "id": "3f6f719e-501a-4f9d-a1d9-e5692f611349",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://192.168.178.16:8000/sse",
+        "include": "selected",
+        "includeTools": [
+          "get_co2",
+          "get_daily_summary",
+          "add",
+          "multiply"
+        ]
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -200
+      ],
+      "id": "c9553e85-6d30-44c2-8579-893b8b6f09ee",
+      "name": "MCP Client"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Extract": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5ce40723-c51d-4d6a-92ea-bfaf3ae70091",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7914e2d7b3e86226643757c43ecbe44327880e855954fbfa95cf7b39f1a72459"
+  },
+  "id": "Bt1oLrpgw2qxMwmu",
+  "tags": []
+}
